@@ -4,6 +4,7 @@
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #include <iostream>
+#include <vector>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -185,6 +186,15 @@ int main(int, char**)
     
     cube.shader.setInt("material.diffuse", 0.5);
     cube.shader.setInt("material.specular", 0.5);
+    
+    std::vector<glm::vec3> models;
+    models.reserve(10);
+    for (int i=0; i<10; i++) {
+        models.push_back(cubePositions[i]);
+    }
+
+    Model parent(cube, models);
+    parent.translate( glm::vec3(1.0f, 0.0f, 0.0f) );
 
     float radius = 5.0f;
 
@@ -204,9 +214,9 @@ int main(int, char**)
 
         ImGui::Begin("Hello, world!");
 
-        ImGui::Text("Adjustments");
+        ImGui::Text("radius");
 
-        ImGui::SliderFloat("float", &radius, 0.0f, 10.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::SliderFloat("radius", &radius, 0.0f, 10.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
         ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
         if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
@@ -246,14 +256,10 @@ int main(int, char**)
         // initlize matrices: projectin & view & model
         glm::mat4 projection = 
             glm::perspective(glm::radians(45.0f), WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f,100.0f);
-        glm::mat4 view = glm::lookAt(camera.Position, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 view = glm::lookAt(camera.Position, glm::vec3 (0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         glm::mat4 model = glm::mat4(1.0f);
 
-        // configure the shader with three matrices above
-        cube.shader.setMat4("projection", projection);
-        cube.shader.setMat4("view", view);
-        // cube.shader.setMat4("model", model);
-
+        cube.set_pro_and_view(projection, view);
 
         // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
@@ -261,19 +267,26 @@ int main(int, char**)
 
         // glActiveTexture(GL_TEXTURE1);
         // glBindTexture(GL_TEXTURE_2D, specular_map);
+        // glm::mat4 trans = glm::mat4(1.0f);
 
-
-        // render triangles
-        glBindVertexArray(cube.m_VAO);
+        // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        // trans = glm::translate(trans, glm::vec3(0.0f, 2.0f, 0.0f));
+        // cube.set_model(trans);
         // glDrawArrays(GL_TRIANGLES, 0, 36);
-        for (unsigned int i =0; i<10; i++) {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            // float angle = 20.0f * i;
-            // model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            cube.shader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+
+        parent.rotate_with_y((float)glfwGetTime());
+        parent.draw();
+
+        // cube.set_model(glm::translate(model, glm::vec3(0.0f, 2.0f, -3.0f)));
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
+        // for (unsigned int i =0; i<10; i++) {
+        //     glm::mat4 model = glm::mat4(1.0f);
+        //     model = glm::translate(model, cubePositions[i]);
+        //     // float angle = 20.0f * i;
+        //     // model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+        //     cube.set_model(model);
+        //     glDrawArrays(GL_TRIANGLES, 0, 36);
+        // }
 
 
         // configure light cube shader
@@ -286,9 +299,8 @@ int main(int, char**)
         model = glm::scale(model, glm::vec3(0.2f));
 
         // set all matrices
-        lightCube.shader.setMat4("projection", projection);
-        lightCube.shader.setMat4("view", view);
-        lightCube.shader.setMat4("model", model);
+        lightCube.set_pro_and_view(projection, view);
+        lightCube.set_model(model);
         lightCube.shader.setVec3("inputColor", light_color);
         
         glBindVertexArray(lightCube.m_VAO);
