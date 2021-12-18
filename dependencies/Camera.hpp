@@ -9,7 +9,7 @@ const float SPEED = 1.5f;
 const float SENSITIVITY = 0.05f;
 const float ZOOM = 45.0f;
 
-glm::vec3 D_POSITION = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 D_POSITION = glm::vec3(0.0f, 0.0f, 5.0f);
 const glm::vec3 D_UP = glm::vec3(0.0f, 1.0f, 0.0f);
 // direction enum
 enum Direction {
@@ -52,21 +52,6 @@ public:
     {
         updateCameraVectors();
     }
-
-    // Camera (
-    //     glm::vec3 position = D_POSITION
-    // )
-    //     :Front(glm::vec3(0.0f, 0.0f, -1.0f)),
-    //     MovementSpeed(SPEED),
-    //     MouseSensitivity(SENSITIVITY),
-    //     Zoom(ZOOM),
-    //     Position(position),
-    //     WorldUp(UP),
-    //     Yaw(YAW),
-    //     Pitch(PITCH)
-    // {
-    //     updateCameraVectors();
-    // }
 
     // destructor 
     // ----------
