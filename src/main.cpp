@@ -21,7 +21,13 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Camera.hpp"
-#include "cube.cpp"
+#include "Shader.hpp"
+#include "Node.cpp"
+// #include "cube.cpp"
+
+#define DRAW cubeShader.setMat4("model", trans); \
+        glDrawArrays(GL_TRIANGLES, 0, 36); \
+        trans = glm::mat4(1.0f)
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -35,12 +41,17 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-#define WINDOW_WIDTH 1280.0f
-#define WINDOW_HEIGHT 720.0f
+#define WINDOW_WIDTH 1920.0f
+#define WINDOW_HEIGHT 1080.0f
 
 // camera
 Camera camera;
 float lastX = WINDOW_WIDTH / 2.0f, lastY = WINDOW_HEIGHT / 2.0f;
+
+// time
+float lastTime = 0.0f;
+float currentTime = 0.0f; 
+float deltaTime = 0.0f;
 
 // lighting 
 glm::vec3 lightPos;
@@ -58,6 +69,36 @@ void mouseCallback (GLFWwindow * window, double xPos, double yPos) {
     lastY = yPos;
 
     camera.ProcessMouseMovement(x_offset, y_offset);
+}
+
+void processInput (GLFWwindow * window, Camera & camera, float deltaTime) {
+    const float sensitivity = 2.5f * deltaTime;
+
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE))
+        glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_W)) {
+        // cameraPos += sensitivity * cameraFront;
+        // camera.processKeyboardInput(FORWARD, deltaTime);
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S)) {
+        // camera.processKeyboardInput(BACKWARD, deltaTime);
+        // cameraPos -= sensitivity * cameraFront;
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_A)) {
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_D)) {
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_R)) {
+        camera.ProcessKeyboard(UP, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_F)) {
+        camera.ProcessKeyboard(DOWN, deltaTime);
+    }
 }
 
 int main(int, char**)
@@ -80,8 +121,8 @@ int main(int, char**)
         return -1;
     }
     
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    // glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouseCallback);
     glfwMakeContextCurrent(window);
  
     // glad retrive all function pointers
@@ -170,33 +211,53 @@ int main(int, char**)
         glm::vec3(-1.3f,  1.0f, -1.5f)
     };
 
-    unsigned int VBO;
+    unsigned int cubeVAO, VBO;
     glGenBuffers(1, &VBO);
+    glGenVertexArrays(1, &cubeVAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
 
-    Cube cube("../GLSLs/cube_vertex.glsl", "../GLSLs/cube_fragment.glsl");
-    Cube lightCube("../GLSLs/light_vertex.glsl", "../GLSLs/light_fragment.glsl");
+    glBindVertexArray(cubeVAO);
+    // position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) 0);
+    glEnableVertexAttribArray(0);
+
+    // nromals
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    unsigned int lightVAO;
+    glBindVertexArray(lightVAO);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) 0);
+    glEnableVertexAttribArray(0);
+    
+
+    Shader cubeShader("../GLSLs/cube_vertex.glsl", "../GLSLs/cube_fragment.glsl");
+    Shader lightShader("../GLSLs/light_vertex.glsl", "../GLSLs/light_fragment.glsl");
 
     unsigned int diffuse_map = loadTexture("../resources/Marc_Dekamps.png");
 
     // unsigned int specular_map = loadTexture("../resources/container2_specular.png");
-    // cube.shader.use();
+    // cubeShader.use();
     
-    cube.shader.setInt("material.diffuse", 0.5);
-    cube.shader.setInt("material.specular", 0.5);
-    
-    std::vector<glm::vec3> models;
-    models.reserve(10);
-    for (int i=0; i<10; i++) {
-        models.push_back(cubePositions[i]);
-    }
-
-    Model parent(cube, models);
-    parent.translate( glm::vec3(1.0f, 0.0f, 0.0f) );
+    cubeShader.setInt("material.diffuse", 0.5);
+    cubeShader.setInt("material.specular", 0.5);
 
     float radius = 5.0f;
+
+    Transformation firstTrans(
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        30.0f
+    );
+
+    Node first (firstTrans, 0);
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -234,32 +295,43 @@ int main(int, char**)
         glViewport(0, 0, display_w, display_h);
         glEnable(GL_DEPTH_TEST);
 
+        // process time
+        // ------------
+        currentTime = glfwGetTime();
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        processInput(window, camera, deltaTime);
+
+
         lightPos = glm::vec3(radius * sin(glfwGetTime()),0.0f,radius * cos(glfwGetTime()));
 
         // configure lighting shader
-        cube.shader.use();
+        cubeShader.use();
 
         // set color data
-        // cube.shader.setVec3("material.diffuse", 1.0f, 0.5f, 0.3f);
+        // cubeShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.3f);
         light_color = glm::vec3(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w);
-        cube.shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-        cube.shader.setFloat("material.shininess", 32.0f);
-        cube.shader.setVec3("light.ambient",  0.3f * light_color);
-        cube.shader.setVec3("light.diffuse",  0.5f * light_color);
-        cube.shader.setVec3("light.specular",  1.0f * light_color);
-        cube.shader.setVec3("light.direction", -lightPos);
-        // cube.shader.setVec3("light.position", lightPos);
-        cube.shader.setVec3("viewPos", camera.Position);
+        cubeShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+        cubeShader.setFloat("material.shininess", 32.0f);
+        cubeShader.setVec3("light.ambient",  0.3f * light_color);
+        cubeShader.setVec3("light.diffuse",  0.5f * light_color);
+        cubeShader.setVec3("light.specular",  1.0f * light_color);
+        cubeShader.setVec3("light.direction", -lightPos);
+        // cubeShader.setVec3("light.position", lightPos);
+        cubeShader.setVec3("viewPos", camera.Position);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
         // initlize matrices: projectin & view & model
         glm::mat4 projection = 
             glm::perspective(glm::radians(45.0f), WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f,100.0f);
-        glm::mat4 view = glm::lookAt(camera.Position, glm::vec3 (0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
 
-        cube.set_pro_and_view(projection, view);
+        cubeShader.setMat4("projection", projection);
+        cubeShader.setMat4("view", view);
+
 
         // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
@@ -267,30 +339,45 @@ int main(int, char**)
 
         // glActiveTexture(GL_TEXTURE1);
         // glBindTexture(GL_TEXTURE_2D, specular_map);
+        
         // glm::mat4 trans = glm::mat4(1.0f);
 
-        // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-        // trans = glm::translate(trans, glm::vec3(0.0f, 2.0f, 0.0f));
-        // cube.set_model(trans);
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(cubeVAO);
+        first.draw(glm::mat4(1.0f), cubeShader);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        parent.rotate_with_y((float)glfwGetTime());
-        parent.draw();
+        // glBindVertexArray(cubeVAO);
 
-        // cube.set_model(glm::translate(model, glm::vec3(0.0f, 2.0f, -3.0f)));
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
-        // for (unsigned int i =0; i<10; i++) {
-        //     glm::mat4 model = glm::mat4(1.0f);
-        //     model = glm::translate(model, cubePositions[i]);
-        //     // float angle = 20.0f * i;
-        //     // model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-        //     cube.set_model(model);
-        //     glDrawArrays(GL_TRIANGLES, 0, 36);
-        // }
+        // // head
+        // trans = glm::translate(trans, glm::vec3(0.0f, 1.0f, 0.0f));
+        // trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
+        // // cube.set_model(trans);
+        // DRAW;
+
+        // // neck
+        // trans = glm::translate(trans, glm::vec3(0.0f, 0.625f, 0.0f));
+        // trans = glm::scale(trans, glm::vec3(0.25f, 0.25f, 0.25f));
+        // // cube.set_model(trans);
+        // DRAW;
+
+        // //body
+        // trans = glm::translate(trans, glm::vec3(0.0f, -0.25f, 0.0f));
+        // trans = glm::scale(trans, glm::vec3(1.0f, 1.5f, 0.75f));
+        // DRAW;
+
+        // // left leg
+        // trans = glm::translate(trans, glm::vec3(-0.25f, -1.75f, 0.0f));
+        // trans = glm::scale(trans, glm::vec3(0.375f, 1.25f, 0.375f));
+        // DRAW;
+
+        // // right leg
+        // trans = glm::translate(trans, glm::vec3(0.25f, -1.75f, 0.0f));
+        // trans = glm::scale(trans, glm::vec3(0.375f, 1.25f, 0.375f));
+        // DRAW;
 
 
         // configure light cube shader
-        lightCube.shader.use();
+        lightShader.use();
 
         // move a little bit
         model = glm::translate(model, lightPos);
@@ -299,11 +386,13 @@ int main(int, char**)
         model = glm::scale(model, glm::vec3(0.2f));
 
         // set all matrices
-        lightCube.set_pro_and_view(projection, view);
-        lightCube.set_model(model);
-        lightCube.shader.setVec3("inputColor", light_color);
         
-        glBindVertexArray(lightCube.m_VAO);
+        lightShader.setMat4("projection", projection);
+        lightShader.setMat4("view", view);
+        lightShader.setMat4("model", model);
+        lightShader.setVec3("inputColor", light_color);
+        
+        glBindVertexArray(lightVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
