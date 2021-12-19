@@ -251,13 +251,32 @@ int main(int, char**)
     float radius = 5.0f;
 
     Transformation firstTrans(
-        glm::vec3(0.0f, 1.0f, 0.0f),
-        glm::vec3(1.0f, 1.0f, 1.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f),
-        30.0f
+        glm::vec3(0.0f, 1.0f, 0.0f),  // translate
+        glm::vec3(1.0f, 1.0f, 1.0f),  // scale
+        glm::vec3(0.0f, 1.0f, 0.0f),  // axis
+        0.0f                          // degrees
     );
 
-    Node first (firstTrans, 0);
+    Transformation secondTrans(
+        glm::vec3(0.0f, -2.0f, 0.0f),  // translate
+        glm::vec3(1.0f, 1.0f, 1.0f),  // scale
+        glm::vec3(0.0f, 1.0f, 0.0f),  // axis
+        40.0f                          // degrees
+    );
+
+    Transformation thirdTrans(
+        glm::vec3(0.0f,-5.0f, 0.0f),  // translate
+        glm::vec3(1.0f, 1.0f, 1.0f),  // scale
+        glm::vec3(0.0f, 1.0f, 0.0f),  // axis
+        0.0f                          // degrees
+    );
+
+    Node first (firstTrans, 1, cubeVAO, cubeShader);
+    Node second (secondTrans, 0, cubeVAO, cubeShader);
+    Node third (thirdTrans, 0, cubeVAO, cubeShader);
+
+    first.addChild(&second);
+    first.addChild(&third);
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -342,9 +361,11 @@ int main(int, char**)
         
         // glm::mat4 trans = glm::mat4(1.0f);
 
-        glBindVertexArray(cubeVAO);
-        first.draw(glm::mat4(1.0f), cubeShader);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        // third.m_trans
+
+        second.m_trans.m_degrees = (float)glfwGetTime();
+
+        first.draw(glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(1.0f, 0.0f, 0.0f)));
 
         // glBindVertexArray(cubeVAO);
 

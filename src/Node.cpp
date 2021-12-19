@@ -40,38 +40,44 @@ struct Transformation
 
 };
 
-class Node {
+struct Node {
 public:
     Transformation m_trans;
-    std::vector<Node> m_children;
+    std::vector<Node*> m_children;
+    unsigned int m_VAO;
+    Shader m_shader;
+    // glm::mat4 m_model;
 
     Node (
         const Transformation & trans,
-        int child_num
+        int child_num, 
+        unsigned int VAO,
+        const Shader & shader
     )
-        : m_trans(trans)
+        : m_trans(trans),
+          m_VAO(VAO),
+          m_shader(shader)
     {
         m_children.reserve(child_num); // reserve vector
         std::cout << "Node Constructed !\n";
     }
 
-    void addChild (const Node & node)
+    void addChild (Node * node)
     {
         m_children.push_back(node);
     }
 
-    void draw (const glm::mat4 & model, const Shader & shader)
+    void draw (const glm::mat4 & model)
     {
+        glBindVertexArray(m_VAO);
         glm::mat4 new_model = m_trans.getTrans(model);
-        shader.setMat4("model", new_model);
-        // m_shader.use();
-        // m_shader.setMat4("model", new_model);
-        // glBindVertexArray(m_VAO);
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
+        // m_model = new_model;
+        m_shader.setMat4("model", new_model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        // for (Node & child : m_children) {
-        //     child.draw(new_model);
-        // }
-        // std::cout << "draw finished \n";
+        for (Node * child : m_children) {
+            child->draw(new_model);
+        }
+
     }
 };
