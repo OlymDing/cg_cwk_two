@@ -33,7 +33,7 @@ void main () {
     // pre-parameters
     // --------------
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(-light.direction);
+    vec3 lightDir = normalize(FragPos-light.direction);
     vec3 reflectDir = reflect(-lightDir, norm);
     vec3 viewDir = normalize(viewPos - FragPos);
 

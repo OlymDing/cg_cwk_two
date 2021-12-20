@@ -31,10 +31,12 @@ struct Transformation
           m_axis(glm::vec3(0.0f, 1.0f, 0.0f)), // by default rotate around y-axis
           m_degrees(0.0f) {}
 
-    glm::mat4 getTrans (const glm::mat4 & model) {
+    // return the model after rotation & translation
+    glm::mat4 getTrans (const glm::mat4 & model)
+    {
         glm::mat4 temp = glm::rotate(model, m_degrees, m_axis);
         temp = glm::translate(temp, m_translate);
-        temp = glm::scale(temp, m_scale);
+        // temp = glm::scale(temp, m_scale);
         return temp;
     }
 
@@ -69,10 +71,11 @@ public:
 
     void draw (const glm::mat4 & model)
     {
+        m_shader.use();
         glBindVertexArray(m_VAO);
         glm::mat4 new_model = m_trans.getTrans(model);
         // m_model = new_model;
-        m_shader.setMat4("model", new_model);
+        m_shader.setMat4("model", glm::scale(new_model, m_trans.m_scale));
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         for (Node * child : m_children) {

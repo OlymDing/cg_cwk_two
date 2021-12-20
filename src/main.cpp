@@ -44,6 +44,8 @@ static void glfw_error_callback(int error, const char* description)
 #define WINDOW_WIDTH 1920.0f
 #define WINDOW_HEIGHT 1080.0f
 
+void renderSphere();
+
 // camera
 Camera camera;
 float lastX = WINDOW_WIDTH / 2.0f, lastY = WINDOW_HEIGHT / 2.0f;
@@ -102,8 +104,10 @@ void processInput (GLFWwindow * window, Camera & camera, float deltaTime) {
 }
 
 int main(int, char**)
-{    // glfw initialize one window 
-    // --------------------------
+{    
+    // ---------------
+    // initializations 
+    // ---------------
     glfwInit();
 
     // set opengl version
@@ -112,38 +116,30 @@ int main(int, char**)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     // set core profile
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    
     GLFWwindow * window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "learning", NULL, NULL);
-
     if (window == NULL) {
         std::cout << "ERROR::WINDOW_CREATING_FAILURE" << std::endl;
         glfwTerminate();
         return -1;
     }
-    
+    // mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouseCallback);
     glfwMakeContextCurrent(window);
- 
-    // glad retrive all function pointers
-    // ----------------------------------
+    // glad set up
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "ERROR::GLAD_RETRIVE_FAILURE" << std::endl;
         glfwTerminate();
         return -1;
     }
-
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-
     ImGui::StyleColorsDark();
-
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
-
     // imgui states
     bool show_demo_window = true;
     bool show_another_window = false;
@@ -153,6 +149,10 @@ int main(int, char**)
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     glEnable(GL_DEPTH_TEST);
 
+    // model data
+    // ----------
+
+    // cube data
     float vertices[] = {
         // positions          // normals           // texture coords
         -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
@@ -197,7 +197,7 @@ int main(int, char**)
         -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
     };
-    // positions all containers
+    // cube positions
     glm::vec3 cubePositions[] = {
         glm::vec3( 0.0f,  0.0f,  0.0f),
         glm::vec3( 2.0f,  5.0f, -15.0f),
@@ -211,98 +211,221 @@ int main(int, char**)
         glm::vec3(-1.3f,  1.0f, -1.5f)
     };
 
+    // generate sphere data
+
+    // generate CCW index list of sphere triangles
+    // k1--k1+1
+    // |  / |
+    // | /  |
+    // k2--k2+1
+    // unsigned int sectorCount = 30, stackCount = 30;
+    // float sphereRadius = 1.0f;
+    // const float PI = glm::pi<float>();
+
+    // std::vector<float> sphereVertices;
+    // sphereVertices.reserve(sectorCount * stackCount * 8);
+
+    // float x, y, z, xy;                              // vertex position
+    // float nx, ny, nz, lengthInv = 1.0f / sphereRadius;    // vertex normal
+    // float s, t;                                     // vertex texCoord
+
+    // float sectorStep = 2 * PI / sectorCount;
+    // float stackStep = PI / stackCount;
+    // float sectorAngle, stackAngle;
+
+    // for(int i = 0; i <= stackCount; ++i)
+    // {
+    //     stackAngle = PI / 2 - i * stackStep;        // starting from pi/2 to -pi/2
+    //     xy = sphereRadius * cosf(stackAngle);             // r * cos(u)
+    //     z = sphereRadius * sinf(stackAngle);              // r * sin(u)
+
+    //     // add (sectorCount+1) vertices per stack
+    //     // the first and last vertices have same position and normal, but different tex coords
+    //     for(int j = 0; j <= sectorCount; ++j)
+    //     {
+    //         sectorAngle = j * sectorStep;           // starting from 0 to 2pi
+
+    //         // vertex position (x, y, z)
+    //         x = xy * cosf(sectorAngle);             // r * cos(u) * cos(v)
+    //         y = xy * sinf(sectorAngle);             // r * cos(u) * sin(v)
+    //         sphereVertices.push_back(x);
+    //         sphereVertices.push_back(y);
+    //         sphereVertices.push_back(z);
+
+    //         // normalized vertex normal (nx, ny, nz)
+    //         nx = x * lengthInv;
+    //         ny = y * lengthInv;
+    //         nz = z * lengthInv;
+    //         sphereVertices.push_back(nx);
+    //         sphereVertices.push_back(ny);
+    //         sphereVertices.push_back(nz);
+
+    //         // vertex tex coord (s, t) range between [0, 1]
+    //         s = (float)j / sectorCount;
+    //         t = (float)i / stackCount;
+    //         sphereVertices.push_back(s);
+    //         sphereVertices.push_back(t);
+    //     }
+    // }
+
+    // std::vector<unsigned int> indices;
+
+    // unsigned int k1, k2;
+    // for(int i = 0; i < stackCount; ++i)
+    // {
+    //     k1 = i * (sectorCount + 1);     // beginning of current stack
+    //     k2 = k1 + sectorCount + 1;      // beginning of next stack
+
+    //     for(int j = 0; j < sectorCount; ++j, ++k1, ++k2)
+    //     {
+    //         // 2 triangles per sector excluding 1st and last stacks
+    //         if(i != 0)
+    //         {
+    //             // addIndices(k1, k2, k1+1);   // k1---k2---k1+1
+    //             indices.push_back(k1);
+    //             indices.push_back(k2);
+    //             indices.push_back(k1+1);
+    //         }
+
+    //         if(i != (stackCount-1))
+    //         {
+    //             // addIndices(k1+1, k2, k2+1); // k1+1---k2---k2+1
+    //             indices.push_back(k1+1);
+    //             indices.push_back(k2);
+    //             indices.push_back(k2+1);
+    //         }
+    //     }
+    // }
+    
+    // cube with texture
+    // -----------------
+
+    // load data into GPU (VBO)
     unsigned int cubeVAO, VBO;
     glGenBuffers(1, &VBO);
     glGenVertexArrays(1, &cubeVAO);
-
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
-
+    // set one cube and its parsing way
     glBindVertexArray(cubeVAO);
     // position
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) 0);
     glEnableVertexAttribArray(0);
-
     // nromals
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
+    // textures
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    // light cube 
+    // ----------
+
+    // set another cube to represent light source
     unsigned int lightVAO;
     glBindVertexArray(lightVAO);
-
+    // position
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) 0);
     glEnableVertexAttribArray(0);
-    
+
+    // sphere
+    // ------
+
+    // load sphere data
+    // unsigned int sphereVBO, sphereVAO;
+
+    // glGenVertexArrays(1, &sphereVAO);
+    // glBindVertexArray(sphereVAO);
+
+    // glGenBuffers(1, &sphereVBO);
+    // glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(sphereVertices.data()), sphereVertices.data(), GL_STATIC_DRAW);
+
+    // unsigned int sphereEBO;
+    // glGenBuffers(1, &sphereEBO);
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereEBO);
+    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices.data()), indices.data(), GL_STATIC_DRAW);
+
+    // glBindVertexArray(sphereEBO);
+    // glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * sizeof(float), (void*)0);
+    // glEnableVertexAttribArray(0);
+    // glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * sizeof(float), (void*)(sizeof(float)*3));
+    // glEnableVertexAttribArray(1);
+    // glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * sizeof(float), (void*)(sizeof(float)*6));
+    // glEnableVertexAttribArray(2);
+
+    // -----------
+    // set shaders
+    // -----------
 
     Shader cubeShader("../GLSLs/cube_vertex.glsl", "../GLSLs/cube_fragment.glsl");
     Shader lightShader("../GLSLs/light_vertex.glsl", "../GLSLs/light_fragment.glsl");
+    Shader colorShader("../GLSLs/colored_vertex.glsl", "../GLSLs/colored_fragment.glsl");
 
-    unsigned int diffuse_map = loadTexture("../resources/Marc_Dekamps.png");
+    // ------------
+    // load texture
+    // ------------
+    unsigned int diffuse_map = loadTexture("../resources/awesomeface.png");
 
     // unsigned int specular_map = loadTexture("../resources/container2_specular.png");
     // cubeShader.use();
     
-    cubeShader.setInt("material.diffuse", 0.5);
-    cubeShader.setInt("material.specular", 0.5);
+    cubeShader.setInt("material.diffuse", 1);
+    cubeShader.setInt("material.specular", 1);
 
     float radius = 5.0f;
 
     Transformation firstTrans(
-        glm::vec3(0.0f, 1.0f, 0.0f),  // translate
-        glm::vec3(1.0f, 1.0f, 1.0f),  // scale
+        glm::vec3(0.0f, -1.0f, 0.0f), // translate
+        glm::vec3(1.0f, 2.0f, 1.0f),  // scale
         glm::vec3(0.0f, 1.0f, 0.0f),  // axis
         0.0f                          // degrees
     );
 
     Transformation secondTrans(
-        glm::vec3(0.0f, -2.0f, 0.0f),  // translate
-        glm::vec3(1.0f, 1.0f, 1.0f),  // scale
-        glm::vec3(0.0f, 1.0f, 0.0f),  // axis
-        40.0f                          // degrees
-    );
-
-    Transformation thirdTrans(
-        glm::vec3(0.0f,-5.0f, 0.0f),  // translate
+        glm::vec3(0.0f, 0.0f, 0.0f),  // translate
         glm::vec3(1.0f, 1.0f, 1.0f),  // scale
         glm::vec3(0.0f, 1.0f, 0.0f),  // axis
         0.0f                          // degrees
     );
 
-    Node first (firstTrans, 1, cubeVAO, cubeShader);
-    Node second (secondTrans, 0, cubeVAO, cubeShader);
-    Node third (thirdTrans, 0, cubeVAO, cubeShader);
+    Transformation thirdTrans(
+        glm::vec3(0.0f, 1.5f, 0.0f),  // translate
+        glm::vec3(1.0f, 1.0f, 1.0f),  // scale
+        glm::vec3(0.0f, 1.0f, 0.0f),  // axis
+        40.0f     // degrees
+    );
 
-    first.addChild(&second);
+    Node first  (firstTrans,  1, cubeVAO, colorShader);
+    Node second (secondTrans, 1, cubeVAO, colorShader);
+    Node third  (thirdTrans,  0, cubeVAO, colorShader);
+
     first.addChild(&third);
+    // second.addChild(&third);
 
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
+        // ---------------------
+        // GLFW & imGUI settings
+        // ---------------------
+
         glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-        static int counter = 0;
 
         ImGui::Begin("Hello, world!");
 
         ImGui::Text("radius");
 
         ImGui::SliderFloat("radius", &radius, 0.0f, 10.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+        ImGui::ColorEdit3("clear color", (float*)&clear_color);        // Edit 3 floats representing a color
 
-        if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-            counter++;
         ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();
@@ -313,111 +436,81 @@ int main(int, char**)
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
         glEnable(GL_DEPTH_TEST);
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
         // process time
         // ------------
         currentTime = glfwGetTime();
         deltaTime = currentTime - lastTime;
         lastTime = currentTime;
-
         processInput(window, camera, deltaTime);
 
-
-        lightPos = glm::vec3(radius * sin(glfwGetTime()),0.0f,radius * cos(glfwGetTime()));
-
-        // configure lighting shader
-        cubeShader.use();
-
-        // set color data
-        // cubeShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.3f);
-        light_color = glm::vec3(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w);
-        cubeShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-        cubeShader.setFloat("material.shininess", 32.0f);
-        cubeShader.setVec3("light.ambient",  0.3f * light_color);
-        cubeShader.setVec3("light.diffuse",  0.5f * light_color);
-        cubeShader.setVec3("light.specular",  1.0f * light_color);
-        cubeShader.setVec3("light.direction", -lightPos);
-        // cubeShader.setVec3("light.position", lightPos);
-        cubeShader.setVec3("viewPos", camera.Position);
-
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        // ---------------------
+        // configure all shaders
+        // ---------------------
 
         // initlize matrices: projectin & view & model
+        // -------------------------------------------
         glm::mat4 projection = 
             glm::perspective(glm::radians(45.0f), WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f,100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
 
+        // configure cubeShader
+        // --------------------
+        cubeShader.use();
+        // configure material
+        cubeShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+        cubeShader.setFloat("material.shininess", 32.0f);
+        // configure light
+        lightPos = glm::vec3(radius * sin(glfwGetTime()),0.0f,radius * cos(glfwGetTime()));
+        light_color = glm::vec3(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w);
+        cubeShader.setVec3("light.ambient",  0.3f * light_color);
+        cubeShader.setVec3("light.diffuse",  0.5f * light_color);
+        cubeShader.setVec3("light.specular",  1.0f * light_color);
+        cubeShader.setVec3("light.direction", lightPos);
+        // cubeShader.setVec3("light.position", lightPos);
+        cubeShader.setVec3("viewPos", camera.Position);
+        // set projection & view
         cubeShader.setMat4("projection", projection);
         cubeShader.setMat4("view", view);
-
 
         // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuse_map);
 
-        // glActiveTexture(GL_TEXTURE1);
-        // glBindTexture(GL_TEXTURE_2D, specular_map);
-        
-        // glm::mat4 trans = glm::mat4(1.0f);
+        // configure colorShader
+        // ---------------------
+        colorShader.use();
+        colorShader.setMat4("projection", projection);
+        colorShader.setMat4("view", view);
+        colorShader.setMat4("model", model);
+        colorShader.setVec3("lightPos", lightPos);
+        colorShader.setVec3("lightColor", light_color);
+        colorShader.setVec3("objectColor", glm::vec3(0.5f, 0.5f, 0.5f));
 
-        // third.m_trans
-
-        second.m_trans.m_degrees = (float)glfwGetTime();
-
-        first.draw(glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(1.0f, 0.0f, 0.0f)));
-
-        // glBindVertexArray(cubeVAO);
-
-        // // head
-        // trans = glm::translate(trans, glm::vec3(0.0f, 1.0f, 0.0f));
-        // trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
-        // // cube.set_model(trans);
-        // DRAW;
-
-        // // neck
-        // trans = glm::translate(trans, glm::vec3(0.0f, 0.625f, 0.0f));
-        // trans = glm::scale(trans, glm::vec3(0.25f, 0.25f, 0.25f));
-        // // cube.set_model(trans);
-        // DRAW;
-
-        // //body
-        // trans = glm::translate(trans, glm::vec3(0.0f, -0.25f, 0.0f));
-        // trans = glm::scale(trans, glm::vec3(1.0f, 1.5f, 0.75f));
-        // DRAW;
-
-        // // left leg
-        // trans = glm::translate(trans, glm::vec3(-0.25f, -1.75f, 0.0f));
-        // trans = glm::scale(trans, glm::vec3(0.375f, 1.25f, 0.375f));
-        // DRAW;
-
-        // // right leg
-        // trans = glm::translate(trans, glm::vec3(0.25f, -1.75f, 0.0f));
-        // trans = glm::scale(trans, glm::vec3(0.375f, 1.25f, 0.375f));
-        // DRAW;
-
-
-        // configure light cube shader
+        // configure lightShader
+        // ---------------------
         lightShader.use();
-
-        // move a little bit
-        model = glm::translate(model, lightPos);
-
-        // scale a little bit
+        // calculate model
+        // model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
-
-        // set all matrices
-        
+        // set projection, view, model & light color
         lightShader.setMat4("projection", projection);
         lightShader.setMat4("view", view);
         lightShader.setMat4("model", model);
         lightShader.setVec3("inputColor", light_color);
-        
+        // draw the light cube
         glBindVertexArray(lightVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // draw the model
+        first.draw(glm::mat4(1.0f));
+        
+        renderSphere();
 
+        // draw UI
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
     }
 
@@ -430,4 +523,101 @@ int main(int, char**)
     glfwTerminate();
 
     return 0;
+}
+
+void renderSphere()
+{
+    unsigned int sphereVAO = 0;
+    unsigned int indexCount;
+    if (sphereVAO == 0)
+    {
+        glGenVertexArrays(1, &sphereVAO);
+
+        unsigned int vbo, ebo;
+        glGenBuffers(1, &vbo);
+        glGenBuffers(1, &ebo);
+
+        std::vector<glm::vec3> positions;
+        std::vector<glm::vec2> uv;
+        std::vector<glm::vec3> normals;
+        std::vector<unsigned int> indices;
+
+        const unsigned int X_SEGMENTS = 64;
+        const unsigned int Y_SEGMENTS = 64;
+        const float PI = 3.14159265359;
+        for (unsigned int y = 0; y <= Y_SEGMENTS; ++y)
+        {
+            for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
+            {
+                float xSegment = (float)x / (float)X_SEGMENTS;
+                float ySegment = (float)y / (float)Y_SEGMENTS;
+                float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
+                float yPos = std::cos(ySegment * PI);
+                float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
+
+                positions.push_back(glm::vec3(xPos, yPos, zPos));
+                uv.push_back(glm::vec2(xSegment, ySegment));
+                normals.push_back(glm::vec3(xPos, yPos, zPos));
+            }
+        }
+
+        bool oddRow = false;
+        for (unsigned int y = 0; y < Y_SEGMENTS; ++y)
+        {
+            if (!oddRow) // even rows: y == 0, y == 2; and so on
+            {
+                for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
+                {
+                    indices.push_back(y       * (X_SEGMENTS + 1) + x);
+                    indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+                }
+            }
+
+          // 这里奇偶分开添加是有道理的，奇偶分开添加，就能首位相连，自己可以拿笔画一画
+            else
+            {
+                for (int x = X_SEGMENTS; x >= 0; --x)
+                {
+                    indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+                    indices.push_back(y       * (X_SEGMENTS + 1) + x);
+                }
+            }
+            oddRow = !oddRow;
+        }
+        indexCount = indices.size();
+
+        std::vector<float> data;
+        for (unsigned int i = 0; i < positions.size(); ++i)
+        {
+            data.push_back(positions[i].x);
+            data.push_back(positions[i].y);
+            data.push_back(positions[i].z);
+            if (uv.size() > 0)
+            {
+                data.push_back(uv[i].x);
+                data.push_back(uv[i].y);
+            }
+            if (normals.size() > 0)
+            {
+                data.push_back(normals[i].x);
+                data.push_back(normals[i].y);
+                data.push_back(normals[i].z);
+            }
+        }
+        glBindVertexArray(sphereVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+        float stride = (3 + 2 + 3) * sizeof(float);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(5 * sizeof(float)));
+    }
+
+    glBindVertexArray(sphereVAO);
+    glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
 }
