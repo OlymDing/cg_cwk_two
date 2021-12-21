@@ -14,7 +14,7 @@
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 // #include <stb_image.h>
 #include <GL/glut.h>
-#include <utils.h>
+#include "utils.cpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -43,8 +43,6 @@ static void glfw_error_callback(int error, const char* description)
 
 #define WINDOW_WIDTH 1920.0f
 #define WINDOW_HEIGHT 1080.0f
-
-void renderSphere();
 
 // camera
 Camera camera;
@@ -153,50 +151,50 @@ int main(int, char**)
     // ----------
 
     // cube data
-    float vertices[] = {
-        // positions          // normals           // texture coords
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+    // float vertices[] = {
+    //     // positions          // normals           // texture coords
+    //     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+    //      0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+    //      0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+    //      0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+    //     -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+    //     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
 
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+    //     -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+    //      0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+    //      0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+    //      0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+    //     -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+    //     -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
 
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+    //     -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+    //     -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+    //     -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+    //     -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+    //     -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    //     -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
 
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+    //      0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+    //      0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+    //      0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+    //      0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+    //      0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    //      0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
 
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+    //     -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+    //      0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+    //      0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+    //      0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+    //     -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+    //     -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
 
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
-    };
+    //     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+    //      0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+    //      0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+    //      0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+    //     -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+    //     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
+    // };
     // cube positions
     glm::vec3 cubePositions[] = {
         glm::vec3( 0.0f,  0.0f,  0.0f),
@@ -211,148 +209,43 @@ int main(int, char**)
         glm::vec3(-1.3f,  1.0f, -1.5f)
     };
 
-    // generate sphere data
-
-    // generate CCW index list of sphere triangles
-    // k1--k1+1
-    // |  / |
-    // | /  |
-    // k2--k2+1
-    // unsigned int sectorCount = 30, stackCount = 30;
-    // float sphereRadius = 1.0f;
-    // const float PI = glm::pi<float>();
-
-    // std::vector<float> sphereVertices;
-    // sphereVertices.reserve(sectorCount * stackCount * 8);
-
-    // float x, y, z, xy;                              // vertex position
-    // float nx, ny, nz, lengthInv = 1.0f / sphereRadius;    // vertex normal
-    // float s, t;                                     // vertex texCoord
-
-    // float sectorStep = 2 * PI / sectorCount;
-    // float stackStep = PI / stackCount;
-    // float sectorAngle, stackAngle;
-
-    // for(int i = 0; i <= stackCount; ++i)
-    // {
-    //     stackAngle = PI / 2 - i * stackStep;        // starting from pi/2 to -pi/2
-    //     xy = sphereRadius * cosf(stackAngle);             // r * cos(u)
-    //     z = sphereRadius * sinf(stackAngle);              // r * sin(u)
-
-    //     // add (sectorCount+1) vertices per stack
-    //     // the first and last vertices have same position and normal, but different tex coords
-    //     for(int j = 0; j <= sectorCount; ++j)
-    //     {
-    //         sectorAngle = j * sectorStep;           // starting from 0 to 2pi
-
-    //         // vertex position (x, y, z)
-    //         x = xy * cosf(sectorAngle);             // r * cos(u) * cos(v)
-    //         y = xy * sinf(sectorAngle);             // r * cos(u) * sin(v)
-    //         sphereVertices.push_back(x);
-    //         sphereVertices.push_back(y);
-    //         sphereVertices.push_back(z);
-
-    //         // normalized vertex normal (nx, ny, nz)
-    //         nx = x * lengthInv;
-    //         ny = y * lengthInv;
-    //         nz = z * lengthInv;
-    //         sphereVertices.push_back(nx);
-    //         sphereVertices.push_back(ny);
-    //         sphereVertices.push_back(nz);
-
-    //         // vertex tex coord (s, t) range between [0, 1]
-    //         s = (float)j / sectorCount;
-    //         t = (float)i / stackCount;
-    //         sphereVertices.push_back(s);
-    //         sphereVertices.push_back(t);
-    //     }
-    // }
-
-    // std::vector<unsigned int> indices;
-
-    // unsigned int k1, k2;
-    // for(int i = 0; i < stackCount; ++i)
-    // {
-    //     k1 = i * (sectorCount + 1);     // beginning of current stack
-    //     k2 = k1 + sectorCount + 1;      // beginning of next stack
-
-    //     for(int j = 0; j < sectorCount; ++j, ++k1, ++k2)
-    //     {
-    //         // 2 triangles per sector excluding 1st and last stacks
-    //         if(i != 0)
-    //         {
-    //             // addIndices(k1, k2, k1+1);   // k1---k2---k1+1
-    //             indices.push_back(k1);
-    //             indices.push_back(k2);
-    //             indices.push_back(k1+1);
-    //         }
-
-    //         if(i != (stackCount-1))
-    //         {
-    //             // addIndices(k1+1, k2, k2+1); // k1+1---k2---k2+1
-    //             indices.push_back(k1+1);
-    //             indices.push_back(k2);
-    //             indices.push_back(k2+1);
-    //         }
-    //     }
-    // }
+    // sphere data
+    std::vector<unsigned int> sphereIndices;
+    std::vector<float> sphereVertices;
     
     // cube with texture
     // -----------------
 
     // load data into GPU (VBO)
-    unsigned int cubeVAO, VBO;
-    glGenBuffers(1, &VBO);
+    // unsigned int cubeVAO, VBO;
+    // glGenBuffers(1, &VBO);
+    // glGenVertexArrays(1, &cubeVAO);
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
+    // // set one cube and its parsing way
+    // glBindVertexArray(cubeVAO);
+    // // position
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) 0);
+    // glEnableVertexAttribArray(0);
+    // // nromals
+    // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    // glEnableVertexAttribArray(1);
+    // // textures
+    // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+    // glEnableVertexAttribArray(2);
+
+    unsigned int cubeVAO;
     glGenVertexArrays(1, &cubeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
-    // set one cube and its parsing way
-    glBindVertexArray(cubeVAO);
-    // position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) 0);
-    glEnableVertexAttribArray(0);
-    // nromals
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    // textures
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    // light cube 
-    // ----------
-
-    // set another cube to represent light source
-    unsigned int lightVAO;
-    glBindVertexArray(lightVAO);
-    // position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) 0);
-    glEnableVertexAttribArray(0);
+    // cubeVAO is 1
+    buildCubeData(cubeVAO);
 
     // sphere
     // ------
 
-    // load sphere data
-    // unsigned int sphereVBO, sphereVAO;
-
-    // glGenVertexArrays(1, &sphereVAO);
-    // glBindVertexArray(sphereVAO);
-
-    // glGenBuffers(1, &sphereVBO);
-    // glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(sphereVertices.data()), sphereVertices.data(), GL_STATIC_DRAW);
-
-    // unsigned int sphereEBO;
-    // glGenBuffers(1, &sphereEBO);
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereEBO);
-    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices.data()), indices.data(), GL_STATIC_DRAW);
-
-    // glBindVertexArray(sphereEBO);
-    // glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * sizeof(float), (void*)0);
-    // glEnableVertexAttribArray(0);
-    // glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * sizeof(float), (void*)(sizeof(float)*3));
-    // glEnableVertexAttribArray(1);
-    // glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * sizeof(float), (void*)(sizeof(float)*6));
-    // glEnableVertexAttribArray(2);
+    unsigned int sphereVAO;
+    glGenVertexArrays(1, &sphereVAO);
+    // sphereVAO is 2
+    buildSphereData(sphereVAO, sphereIndices, sphereVertices);
 
     // -----------
     // set shaders
@@ -377,31 +270,32 @@ int main(int, char**)
 
     Transformation firstTrans(
         glm::vec3(0.0f, -1.0f, 0.0f), // translate
-        glm::vec3(1.0f, 2.0f, 1.0f),  // scale
+        glm::vec3(1.0f, 1.0f, 1.0f),  // scale
         glm::vec3(0.0f, 1.0f, 0.0f),  // axis
         0.0f                          // degrees
     );
 
     Transformation secondTrans(
-        glm::vec3(0.0f, 0.0f, 0.0f),  // translate
+        glm::vec3(0.0f, 1.0f, 0.0f),  // translate
         glm::vec3(1.0f, 1.0f, 1.0f),  // scale
         glm::vec3(0.0f, 1.0f, 0.0f),  // axis
-        0.0f                          // degrees
+        20.0f                          // degrees
     );
 
     Transformation thirdTrans(
-        glm::vec3(0.0f, 1.5f, 0.0f),  // translate
+        glm::vec3(0.0f, 1.0f, 0.0f),  // translate
         glm::vec3(1.0f, 1.0f, 1.0f),  // scale
         glm::vec3(0.0f, 1.0f, 0.0f),  // axis
         40.0f     // degrees
     );
 
-    Node first  (firstTrans,  1, cubeVAO, colorShader);
+    Node first  (firstTrans,  1, cubeVAO, cubeShader);
     Node second (secondTrans, 1, cubeVAO, colorShader);
-    Node third  (thirdTrans,  0, cubeVAO, colorShader);
+    Node third  (thirdTrans,  0, sphereVAO, lightShader);
 
-    first.addChild(&third);
-    // second.addChild(&third);
+    first.addChild(&second);
+    second.addChild(&third);
+    // unsigned int sphereVAO = 0;
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -489,25 +383,24 @@ int main(int, char**)
         colorShader.setVec3("lightColor", light_color);
         colorShader.setVec3("objectColor", glm::vec3(0.5f, 0.5f, 0.5f));
 
+        // glBindVertexArray(cubeVAO);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
         // configure lightShader
         // ---------------------
         lightShader.use();
-        // calculate model
-        // model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.2f));
-        // set projection, view, model & light color
         lightShader.setMat4("projection", projection);
         lightShader.setMat4("view", view);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f));
         lightShader.setMat4("model", model);
         lightShader.setVec3("inputColor", light_color);
-        // draw the light cube
-        glBindVertexArray(lightVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        // draw the model
+        // draw the light cube    
         first.draw(glm::mat4(1.0f));
-        
-        renderSphere();
+
+
+        // glBindVertexArray(sphereVAO);
+        // // std::cout << sphereIndices.size() << std::endl;
+        // glDrawElements(GL_TRIANGLE_STRIP, sphereIndices.size(), GL_UNSIGNED_INT, 0);
 
         // draw UI
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -523,101 +416,4 @@ int main(int, char**)
     glfwTerminate();
 
     return 0;
-}
-
-void renderSphere()
-{
-    unsigned int sphereVAO = 0;
-    unsigned int indexCount;
-    if (sphereVAO == 0)
-    {
-        glGenVertexArrays(1, &sphereVAO);
-
-        unsigned int vbo, ebo;
-        glGenBuffers(1, &vbo);
-        glGenBuffers(1, &ebo);
-
-        std::vector<glm::vec3> positions;
-        std::vector<glm::vec2> uv;
-        std::vector<glm::vec3> normals;
-        std::vector<unsigned int> indices;
-
-        const unsigned int X_SEGMENTS = 64;
-        const unsigned int Y_SEGMENTS = 64;
-        const float PI = 3.14159265359;
-        for (unsigned int y = 0; y <= Y_SEGMENTS; ++y)
-        {
-            for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
-            {
-                float xSegment = (float)x / (float)X_SEGMENTS;
-                float ySegment = (float)y / (float)Y_SEGMENTS;
-                float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
-                float yPos = std::cos(ySegment * PI);
-                float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
-
-                positions.push_back(glm::vec3(xPos, yPos, zPos));
-                uv.push_back(glm::vec2(xSegment, ySegment));
-                normals.push_back(glm::vec3(xPos, yPos, zPos));
-            }
-        }
-
-        bool oddRow = false;
-        for (unsigned int y = 0; y < Y_SEGMENTS; ++y)
-        {
-            if (!oddRow) // even rows: y == 0, y == 2; and so on
-            {
-                for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
-                {
-                    indices.push_back(y       * (X_SEGMENTS + 1) + x);
-                    indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
-                }
-            }
-
-          // 这里奇偶分开添加是有道理的，奇偶分开添加，就能首位相连，自己可以拿笔画一画
-            else
-            {
-                for (int x = X_SEGMENTS; x >= 0; --x)
-                {
-                    indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
-                    indices.push_back(y       * (X_SEGMENTS + 1) + x);
-                }
-            }
-            oddRow = !oddRow;
-        }
-        indexCount = indices.size();
-
-        std::vector<float> data;
-        for (unsigned int i = 0; i < positions.size(); ++i)
-        {
-            data.push_back(positions[i].x);
-            data.push_back(positions[i].y);
-            data.push_back(positions[i].z);
-            if (uv.size() > 0)
-            {
-                data.push_back(uv[i].x);
-                data.push_back(uv[i].y);
-            }
-            if (normals.size() > 0)
-            {
-                data.push_back(normals[i].x);
-                data.push_back(normals[i].y);
-                data.push_back(normals[i].z);
-            }
-        }
-        glBindVertexArray(sphereVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
-        float stride = (3 + 2 + 3) * sizeof(float);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(5 * sizeof(float)));
-    }
-
-    glBindVertexArray(sphereVAO);
-    glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
 }

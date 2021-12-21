@@ -22,7 +22,7 @@ GLM_DIR = $(DEP_DIR)/glm
 
 SRC_DIR = ../src
 
-SOURCES = $(SRC_DIR)/main.cpp $(SRC_DIR)/glad.c $(SRC_DIR)/stb_image.cpp $(SRC_DIR)/utils.cpp $(SRC_DIR)/Node.cpp
+SOURCES = $(SRC_DIR)/main.cpp $(SRC_DIR)/glad.c $(SRC_DIR)/stb_image.cpp $(SRC_DIR)/Node.cpp
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/../backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/../backends/imgui_impl_opengl3.cpp
 

@@ -76,11 +76,11 @@ public:
         glm::mat4 new_model = m_trans.getTrans(model);
         // m_model = new_model;
         m_shader.setMat4("model", glm::scale(new_model, m_trans.m_scale));
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        for (Node * child : m_children) {
+        if (m_VAO == 1)
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        if (m_VAO == 2)
+            glDrawElements(GL_TRIANGLE_STRIP, 8320, GL_UNSIGNED_INT, 0);
+        for (Node * child : m_children)
             child->draw(new_model);
-        }
-
     }
 };
