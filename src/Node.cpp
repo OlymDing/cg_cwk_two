@@ -12,21 +12,24 @@
 
 struct Transformation
 {
+    glm::vec3 m_childTranslate;
     glm::vec3 m_translate;
     glm::vec3 m_scale;
     glm::vec3 m_axis;
     float m_degrees;
 
     // full-parameter constructor
-    Transformation (const glm::vec3 & translate, const glm::vec3 & scale, const glm::vec3 & axis, float degrees)
-        : m_translate(translate),
+    Transformation (const glm::vec3 & childTranslate, const glm::vec3 & translate, const glm::vec3 & scale, const glm::vec3 & axis, float degrees)
+        : m_childTranslate(childTranslate),
+          m_translate(translate),
           m_scale(scale),
           m_axis(axis),
           m_degrees(degrees) {}
 
     // default constructor
     Transformation () 
-        : m_translate(glm::vec3(1.0f)),
+        : m_childTranslate(glm::vec3(0.0f)),
+          m_translate(glm::vec3(1.0f)),
           m_scale(glm::vec3(1.0f)),
           m_axis(glm::vec3(0.0f, 1.0f, 0.0f)), // by default rotate around y-axis
           m_degrees(0.0f) {}
@@ -34,8 +37,9 @@ struct Transformation
     // return the model after rotation & translation
     glm::mat4 getTrans (const glm::mat4 & model)
     {
-        glm::mat4 temp = glm::rotate(model, m_degrees, m_axis);
-        temp = glm::translate(temp, m_translate);
+        glm::mat4 temp = glm::translate(model, m_translate);
+        temp = glm::rotate(temp, m_degrees, m_axis);
+        temp = glm::translate(temp, m_childTranslate);
         // temp = glm::scale(temp, m_scale);
         return temp;
     }
@@ -48,6 +52,7 @@ public:
     std::vector<Node*> m_children;
     unsigned int m_VAO;
     Shader m_shader;
+    glm::vec3 m_color;
     // glm::mat4 m_model;
 
     Node (
@@ -58,7 +63,8 @@ public:
     )
         : m_trans(trans),
           m_VAO(VAO),
-          m_shader(shader)
+          m_shader(shader),
+          m_color(glm::vec3(0.5f))
     {
         m_children.reserve(child_num); // reserve vector
         std::cout << "Node Constructed !\n";
@@ -72,6 +78,7 @@ public:
     void draw (const glm::mat4 & model)
     {
         m_shader.use();
+        m_shader.setVec3("objectColor", m_color);
         glBindVertexArray(m_VAO);
         glm::mat4 new_model = m_trans.getTrans(model);
         // m_model = new_model;

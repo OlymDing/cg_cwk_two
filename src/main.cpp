@@ -29,6 +29,17 @@
         glDrawArrays(GL_TRIANGLES, 0, 36); \
         trans = glm::mat4(1.0f)
 
+#define ImConvert(part) \
+{\
+    part##_color = glm::vec3(Im_##part##_color.x * Im_##part##_color.w, Im_##part##_color.y * Im_##part##_color.w, Im_##part##_color.z * Im_##part##_color.w);\
+    part.m_color = part##_color;\
+}
+
+#define ImConvert2(part) \
+{\
+    part##_color = glm::vec3(Im_##part##_color.x * Im_##part##_color.w, Im_##part##_color.y * Im_##part##_color.w, Im_##part##_color.z * Im_##part##_color.w);\
+}
+
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
 // Your own project should not be affected, as you are likely to link with a newer binary of GLFW that is adequate for your version of Visual Studio.
@@ -121,8 +132,8 @@ int main(int, char**)
         return -1;
     }
     // mouse
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetCursorPosCallback(window, mouseCallback);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetCursorPosCallback(window, mouseCallback);
     glfwMakeContextCurrent(window);
     // glad set up
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -141,98 +152,26 @@ int main(int, char**)
     // imgui states
     bool show_demo_window = true;
     bool show_another_window = false;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ImVec4 Im_light_color = ImVec4(1.0f, 1.0f, 1.0f, 1.00f);
+    ImVec4 Im_body_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ImVec4 Im_leftShoulder_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ImVec4 Im_rightShoulder_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ImVec4 Im_leftArm_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ImVec4 Im_rightArm_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
     glm::vec3 light_color;
+    glm::vec3 body_color;
+    glm::vec3 leftShoulder_color;
+    glm::vec3 rightShoulder_color;
+    glm::vec3 leftArm_color;
+    glm::vec3 rightArm_color;
     
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     glEnable(GL_DEPTH_TEST);
 
-    // model data
-    // ----------
-
-    // cube data
-    // float vertices[] = {
-    //     // positions          // normals           // texture coords
-    //     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-    //      0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-    //      0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-    //      0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-    //     -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
-    //     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-
-    //     -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-    //      0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
-    //      0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-    //      0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-    //     -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
-    //     -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-
-    //     -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-    //     -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-    //     -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-    //     -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-    //     -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-    //     -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-
-    //      0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-    //      0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-    //      0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-    //      0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-    //      0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-    //      0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-
-    //     -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-    //      0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
-    //      0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-    //      0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-    //     -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
-    //     -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-
-    //     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-    //      0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
-    //      0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-    //      0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-    //     -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
-    //     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
-    // };
-    // cube positions
-    glm::vec3 cubePositions[] = {
-        glm::vec3( 0.0f,  0.0f,  0.0f),
-        glm::vec3( 2.0f,  5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3( 2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f,  3.0f, -7.5f),
-        glm::vec3( 1.3f, -2.0f, -2.5f),
-        glm::vec3( 1.5f,  2.0f, -2.5f),
-        glm::vec3( 1.5f,  0.2f, -1.5f),
-        glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
-
     // sphere data
     std::vector<unsigned int> sphereIndices;
     std::vector<float> sphereVertices;
-    
-    // cube with texture
-    // -----------------
-
-    // load data into GPU (VBO)
-    // unsigned int cubeVAO, VBO;
-    // glGenBuffers(1, &VBO);
-    // glGenVertexArrays(1, &cubeVAO);
-    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
-    // // set one cube and its parsing way
-    // glBindVertexArray(cubeVAO);
-    // // position
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) 0);
-    // glEnableVertexAttribArray(0);
-    // // nromals
-    // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    // glEnableVertexAttribArray(1);
-    // // textures
-    // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
-    // glEnableVertexAttribArray(2);
 
     unsigned int cubeVAO;
     glGenVertexArrays(1, &cubeVAO);
@@ -258,7 +197,8 @@ int main(int, char**)
     // ------------
     // load texture
     // ------------
-    unsigned int diffuse_map = loadTexture("../resources/awesomeface.png");
+    unsigned int face_map = loadTexture("../resources/Marc_Dekamps.png");
+    unsigned int earth_map = loadTexture("../resources/Mercator-projection.png");
 
     // unsigned int specular_map = loadTexture("../resources/container2_specular.png");
     // cubeShader.use();
@@ -267,35 +207,149 @@ int main(int, char**)
     cubeShader.setInt("material.specular", 1);
 
     float radius = 5.0f;
+    float height = 3.0f;
+    float lightAngle = 30.0f;
+    float specular_constant = 32.0f;
 
-    Transformation firstTrans(
-        glm::vec3(0.0f, -1.0f, 0.0f), // translate
-        glm::vec3(1.0f, 1.0f, 1.0f),  // scale
+    Node body ({
+        glm::vec3(0.0f),
+        glm::vec3(0.0f, 2.0f, 0.0f), // translate
+        glm::vec3(2.0f, 3.0f, 1.0f),  // scale
         glm::vec3(0.0f, 1.0f, 0.0f),  // axis
+        0.0f                          // degrees    
+    }, 1, cubeVAO, colorShader);
+
+    Node head ({
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec3(0.0f, 1.5f, 0.0f),  // translate
+        glm::vec3(1.3f, 1.3f, 1.3f),  // scale
+        glm::vec3(0.0f, 1.0f, 0.0f),  // axis
+        (float)glm::radians(90.0f)    // degrees
+    }, 1, sphereVAO, cubeShader);
+
+    Node leftShoulder({
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(1.4f, 1.5f, 0.0f),  // translate
+        glm::vec3(0.6f, 0.6f, 0.8f),  // scale
+        glm::vec3(1.0f, 0.0f, 0.0f),  // axis
         0.0f                          // degrees
-    );
+    }, 1, sphereVAO, colorShader);
 
-    Transformation secondTrans(
-        glm::vec3(0.0f, 1.0f, 0.0f),  // translate
+    Node rightShoulder({
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(-1.4f, 1.5f, 0.0f),  // translate
+        glm::vec3(0.6f, 0.6f, 0.8f),  // scale
+        glm::vec3(0.0f, 0.0f, 1.0f),  // axis
+        0.0f                          // degrees
+    }, 1, sphereVAO, colorShader);
+
+    Node leftArm({
+        glm::vec3(0.0f, -1.3f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),  // translate
+        glm::vec3(0.3f, 1.5f, 0.3f),  // scale
+        glm::vec3(0.0f, 0.0f, 1.0f),  // axis
+        // 0.0f
+        (float)glm::radians(30.0f)    // degrees
+    }, 1, cubeVAO, colorShader);
+
+    Node rightArm({
+        glm::vec3(0.0f, -1.3f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),  // translate
+        glm::vec3(0.3f, 1.5f, 0.3f),  // scale
+        glm::vec3(0.0f, 0.0f, 1.0f),  // axis
+        // 0.0f
+        (float)glm::radians(-30.0f)    // degrees
+    }, 1, cubeVAO, colorShader);
+
+    Node leftElbow({
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, -1.1f, 0.0f),  // translate
+        glm::vec3(0.5f, 0.5f, 0.5f),  // scale
+        glm::vec3(1.0f, 0.0f, 0.0f),  // axis
+        0.0f
+    }, 1, sphereVAO, colorShader);
+
+    Node rightElbow({
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, -1.1f, 0.0f),  // translate
+        glm::vec3(0.5f, 0.5f, 0.5f),  // scale
+        glm::vec3(0.0f, 0.0f, 1.0f),  // axis
+        (float)glm::radians(-30.0f)
+    }, 1, sphereVAO, colorShader);
+
+    Node leftForearm({
+        glm::vec3(0.0f, -0.8f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),  // translate
+        glm::vec3(0.2f, 1.0f, 0.2f),  // scale
+        glm::vec3(1.0f, 0.0f, 0.0f),  // axis
+        0.0f
+    }, 1, cubeVAO, colorShader);
+
+    Node rightForearm({
+        glm::vec3(0.0f, -0.8f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),  // translate
+        glm::vec3(0.2f, 1.0f, 0.2f),  // scale
+        glm::vec3(1.0f, 0.0f, 0.0f),  // axis
+        0.0f
+    }, 1, cubeVAO, colorShader);
+    
+    Node hip({
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, -2.0f, 0.0f),  // translate
+        glm::vec3(2.0f, 0.5f, 1.0f),  // scale
+        glm::vec3(1.0f, 0.0f, 0.0f),  // axis
+        0.0f
+    }, 1, sphereVAO, colorShader);
+
+    Node leftThigh({
+        glm::vec3(0.5f, -1.5f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),  // translate
+        glm::vec3(0.7f, 2.0f, 0.5f),  // scale
+        glm::vec3(1.0f, 0.0f, 0.0f),  // axis
+        0.0f
+    }, 1, cubeVAO, colorShader);
+
+    Node rightThigh({
+        glm::vec3(-0.5f, -1.5f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),  // translate
+        glm::vec3(0.7f, 2.0f, 0.5f),  // scale
+        glm::vec3(1.0f, 0.0f, 0.0f),  // axis
+        0.0f
+    }, 1, cubeVAO, colorShader);
+
+    Node lightCube ({
+        glm::vec3(0.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),  // translate
         glm::vec3(1.0f, 1.0f, 1.0f),  // scale
-        glm::vec3(0.0f, 1.0f, 0.0f),  // axis
-        20.0f                          // degrees
-    );
+        glm::vec3(1.0f, 0.0f, 0.0f),  // axis
+        0.0f
+    }, 1, cubeVAO, lightShader);
 
-    Transformation thirdTrans(
-        glm::vec3(0.0f, 1.0f, 0.0f),  // translate
-        glm::vec3(1.0f, 1.0f, 1.0f),  // scale
-        glm::vec3(0.0f, 1.0f, 0.0f),  // axis
-        40.0f     // degrees
-    );
+    Node Earth ({
+        glm::vec3(0.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),  // translate
+        glm::vec3(3.0f, 3.0f, 3.0f),  // scale
+        glm::vec3(1.0f, 0.0f, 0.0f),  // axis
+        0.0f
+    }, 1, sphereVAO, cubeShader);
 
-    Node first  (firstTrans,  1, cubeVAO, cubeShader);
-    Node second (secondTrans, 1, cubeVAO, colorShader);
-    Node third  (thirdTrans,  0, sphereVAO, lightShader);
+    body.addChild(&head);
+    body.addChild(&leftShoulder);
+    body.addChild(&rightShoulder);
+    leftShoulder.addChild(&leftArm);
+    rightShoulder.addChild(&rightArm);
+    leftArm.addChild(&leftElbow);
+    rightArm.addChild(&rightElbow);
+    leftElbow.addChild(&leftForearm);
+    rightElbow.addChild(&rightForearm);
 
-    first.addChild(&second);
-    second.addChild(&third);
-    // unsigned int sphereVAO = 0;
+    hip.addChild(&leftThigh);
+    hip.addChild(&rightThigh);
+
+    hip.addChild(&body);
+
+    body.m_color = glm::vec3(0.0f, 1.0f, 0.0f);
+    leftShoulder.m_color = glm::vec3(0.0f, 1.0f, 0.0f);
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -312,14 +366,24 @@ int main(int, char**)
         ImGui::NewFrame();
 
 
-        ImGui::Begin("Hello, world!");
+        ImGui::Begin("Light Settings");
 
         ImGui::Text("radius");
 
         ImGui::SliderFloat("radius", &radius, 0.0f, 10.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("clear color", (float*)&clear_color);        // Edit 3 floats representing a color
+        ImGui::SliderFloat("height", &height, -4.0f, 4.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::SliderFloat("light angle", &lightAngle, 0.0f, 360.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::ColorEdit3("light color", (float*)&Im_light_color);        // Edit 3 floats representing a color
+        ImGui::End();
 
-        ImGui::SameLine();
+        ImGui::Begin("Color Settings");
+
+        ImGui::ColorEdit3("body color", (float*)&Im_body_color);        // Edit 3 floats representing a color
+        ImGui::ColorEdit3("left shoulder color", (float*)&Im_leftShoulder_color);        // Edit 3 floats representing a color
+        ImGui::ColorEdit3("right shoulder color", (float*)&Im_rightShoulder_color);        // Edit 3 floats representing a color
+        ImGui::ColorEdit3("left arm color", (float*)&Im_leftArm_color);        // Edit 3 floats representing a color
+        ImGui::ColorEdit3("right arm color", (float*)&Im_rightArm_color);        // Edit 3 floats representing a color
+        ImGui::SliderFloat("specular", &specular_constant, 0.0f, 50.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();
@@ -354,11 +418,11 @@ int main(int, char**)
         // --------------------
         cubeShader.use();
         // configure material
-        cubeShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-        cubeShader.setFloat("material.shininess", 32.0f);
+        cubeShader.setFloat("material.shininess", specular_constant);
         // configure light
-        lightPos = glm::vec3(radius * sin(glfwGetTime()),0.0f,radius * cos(glfwGetTime()));
-        light_color = glm::vec3(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w);
+        lightPos = glm::vec3(radius * sin(glm::radians(lightAngle)), height, radius * cos(glm::radians(lightAngle)));
+        light_color = glm::vec3(Im_light_color.x * Im_light_color.w, Im_light_color.y * Im_light_color.w, Im_light_color.z * Im_light_color.w);
+
         cubeShader.setVec3("light.ambient",  0.3f * light_color);
         cubeShader.setVec3("light.diffuse",  0.5f * light_color);
         cubeShader.setVec3("light.specular",  1.0f * light_color);
@@ -371,7 +435,11 @@ int main(int, char**)
 
         // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuse_map);
+        glBindTexture(GL_TEXTURE_2D, earth_map);
+
+        Earth.draw(glm::mat4(1.0f));
+
+        glBindTexture(GL_TEXTURE_2D, face_map);
 
         // configure colorShader
         // ---------------------
@@ -381,10 +449,8 @@ int main(int, char**)
         colorShader.setMat4("model", model);
         colorShader.setVec3("lightPos", lightPos);
         colorShader.setVec3("lightColor", light_color);
-        colorShader.setVec3("objectColor", glm::vec3(0.5f, 0.5f, 0.5f));
+        // colorShader.setVec3("objectColor", glm::vec3(0.5f, 0.5f, 0.5f));
 
-        // glBindVertexArray(cubeVAO);
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
         // configure lightShader
         // ---------------------
         lightShader.use();
@@ -394,13 +460,28 @@ int main(int, char**)
         model = glm::scale(model, glm::vec3(0.2f));
         lightShader.setMat4("model", model);
         lightShader.setVec3("inputColor", light_color);
-        // draw the light cube    
-        first.draw(glm::mat4(1.0f));
+        
+        lightCube.draw(model);
 
+        // animation
+        float angle = (float)glfwGetTime();
+        rightShoulder.m_trans.m_degrees = glm::radians(-80.0f + 30.0f * sin(angle * 2));
+        rightElbow.m_trans.m_degrees = glm::radians(-50.0f + 30.0f * sin(angle * 2));
+        rightThigh.m_trans.m_degrees = glm::radians(30.0f * sin(angle * 2));
+        leftThigh.m_trans.m_degrees = -glm::radians(30.0f * sin(angle * 2));
+        leftShoulder.m_trans.m_degrees = glm::radians(45.0f * sin(angle * 2));
+        body.m_trans.m_degrees = glm::radians(20.0f * sin(angle * 2));
+        glm::mat4 overallModel = glm::rotate(glm::mat4(1.0f), -(float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
 
-        // glBindVertexArray(sphereVAO);
-        // // std::cout << sphereIndices.size() << std::endl;
-        // glDrawElements(GL_TRIANGLE_STRIP, sphereIndices.size(), GL_UNSIGNED_INT, 0);
+        // color
+        ImConvert(body);
+        ImConvert(leftShoulder);
+        ImConvert(rightShoulder);
+        ImConvert(leftArm);
+        ImConvert(rightArm);
+        
+        overallModel = glm::translate(overallModel, glm::vec3(5.0f, 0.0f, 0.0f));
+        hip.draw(overallModel);
 
         // draw UI
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

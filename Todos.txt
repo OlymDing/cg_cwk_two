@@ -1,0 +1,11 @@
+Todos:
+    完成节点设置(another translate) morning
+    完成米其林的模型 afternoon
+    设计动画 night
+
+    完成报告和录屏 the next day
+
+translate-rotate-translate
+子节点关节         父节点关节
+
+how to add child's knob data into the "draw" method ?
